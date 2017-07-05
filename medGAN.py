@@ -1,10 +1,10 @@
 import numpy as np
 import tensorflow as tf
+from matplotlib import pyplot as plt
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import train_test_split
 from tensorflow.contrib.layers import batch_norm
 from tensorflow.contrib.layers import l2_regularizer
-from matplotlib import pyplot as plt
 
 _VALIDATION_RATIO = 0.1
 
@@ -206,16 +206,16 @@ class Medgan(object):
             x_reconst = tf.nn.relu(
                 tf.add(tf.matmul(temp_vec, decode_variables['aed_W_' + str(i)]), decode_variables['aed_b_' + str(i)]))
 
-        np.random.seed(1234)
+        np.random.seed(12345)
         saver = tf.train.Saver()
         output_vec = []
         burn_in = 1000
         with tf.Session() as sess:
             saver.restore(sess, model_file)
-            print('burning in')
-            for i in range(burn_in):
-                random_x = np.random.normal(size=(batch_size, self.random_dim))
-                output = sess.run(x_reconst, feed_dict={x_random: random_x, bn_train: True})
+            # print('burning in')
+            # for i in range(burn_in):
+            #     random_x = np.random.normal(size=(batch_size, self.random_dim))
+            #     output = sess.run(x_reconst, feed_dict={x_random: random_x, bn_train: True})
 
             print('generating')
             n_batches = int(np.ceil(float(n_samples)) / float(batch_size))
@@ -226,12 +226,12 @@ class Medgan(object):
 
         output_mat = np.array(output_vec)
         np.save(out_file, output_mat)
-        output_mat = output_mat // 0.5
+        output_mat = output_mat // 0.51
         output_mat = np.transpose(output_mat)
-        result=[]
+        result = []
         for i in output_mat:
-            result.append(np.sum(i) / 5000)
-        plt.scatter(np.arange(20,70),result , s=25, alpha=0.4, marker='o')
+            result.append(np.sum(i) / n_samples)
+        plt.scatter(np.arange(1, 100, 2)/100, result)
         plt.show()
 
     def calculate_disc_auc(self, preds_real, preds_fake):
@@ -436,14 +436,14 @@ if __name__ == '__main__':
                 bn_decay=config['batchnorm_decay'],
                 l2_scale=config['L2'])
 
-    mg.train(data_path=config['data_file'],
-             model_path=config['model_file'],
-             out_path=config['out_file'],
-             pretrain_epochs=config['n_pretrain_epoch'],
-             n_epochs=config['n_epoch'],
-             discriminator_train_period=config['n_discriminator_update'],
-             generator_train_period=config['n_generator_update'],
-             pretrain_batch_size=config['pretrain_batch_size'],
-             batch_size=config['batch_size'],
-             save_max_keep=config['save_max_keep'])
-    #mg.generate_data(n_samples=5000, model_file='./medGAN_result/result-199')
+    # mg.train(data_path=config['data_file'],
+    #          model_path=config['model_file'],
+    #          out_path=config['out_file'],
+    #          pretrain_epochs=config['n_pretrain_epoch'],
+    #          n_epochs=config['n_epoch'],
+    #          discriminator_train_period=config['n_discriminator_update'],
+    #          generator_train_period=config['n_generator_update'],
+    #          pretrain_batch_size=config['pretrain_batch_size'],
+    #          batch_size=config['batch_size'],
+    #          save_max_keep=config['save_max_keep'])
+    mg.generate_data(n_samples=50000, model_file='./medGAN_result/result-199')
